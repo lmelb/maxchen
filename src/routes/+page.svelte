@@ -2,11 +2,10 @@
 	import ShotSpinner from './ShotSpinner.svelte';
 
 	import Button from '$lib/components/ui/button/button.svelte';
-	import { Label } from '$lib/components/ui/label/index.js';
+	import * as Card from '$lib/components/ui/card';
 
-	import { Dice1, Dice2, Minus, Play, Plus, RefreshCcw } from 'lucide-svelte';
+	import { Dice1, Dice2, Minus, Play, Plus, RefreshCcw, Trash, UserPlus } from 'lucide-svelte';
 
-	import * as Drawer from '$lib/components/ui/drawer';
 	import * as Table from '$lib/components/ui/table';
 
 	import Input from '$lib/components/ui/input/input.svelte';
@@ -46,6 +45,9 @@
 		playerName = undefined;
 	}
 
+	function removePlayer(id: number) {
+		players = players.filter((player) => player.id !== id);
+	}
 	function startRound() {
 		let newRound: Round = {
 			index: currentRound,
@@ -61,6 +63,8 @@
 	function resetGame() {
 		players = [];
 		rounds = [];
+		playerCount = 0;
+		currentRound = 0;
 	}
 
 	function score(id: number) {
@@ -93,11 +97,10 @@
 	}
 
 	let playerName: string | undefined;
-	let isAddPlayerOpen = false;
 </script>
 
-<nav class="flex sticky top-0 items-center justify-between p-2 z-10 bg-white border">
-	<h1 class="font- uppercase flex"><Dice2 /><Dice1 /> <span class="pl-2">Mäxchen</span></h1>
+<nav class="sticky top-0 z-10 flex items-center justify-between border bg-white p-2">
+	<h1 class="font- flex uppercase"><Dice2 /><Dice1 /> <span class="pl-2">Mäxchen</span></h1>
 
 	<div class="flex items-center gap-2">
 		{#if rounds.length > 0}
@@ -107,41 +110,51 @@
 		{/if}
 	</div>
 </nav>
-<main class="relative">
+<main class="p-4">
 	{#if rounds.length === 0}
-		<div class="p-4 w-full flex gap-2 items-center justify-center">
-			<Drawer.Root bind:open={isAddPlayerOpen}>
-				<Drawer.Trigger asChild let:builder>
-					<Button variant="outline" builders={[builder]}>Add Players</Button>
-				</Drawer.Trigger>
-				<Drawer.Content>
-					<Drawer.Header class="text-left">
-						<Drawer.Title>Add Player</Drawer.Title>
-						<Drawer.Description>Add a new player to the Game</Drawer.Description>
-					</Drawer.Header>
-					<form class="grid items-start gap-4 px-4" on:submit={() => addPlayer(playerName)}>
-						<div class="grid gap-2">
-							<Label for="name">Name</Label>
-							<Input id="name" bind:value={playerName} />
+		<Card.Root>
+			<Card.Header>
+				<Card.Title>Add Players</Card.Title>
+				<Card.Description>Add a new players to the Game</Card.Description>
+			</Card.Header>
+			<Card.Content>
+				<form on:submit={() => addPlayer(playerName)}>
+					<div class="grid gap-2">
+						{#each players as player}
+							<div class="flex justify-stretch gap-2">
+								<div class="w-full rounded-md border px-4 py-3 font-mono text-sm">
+									{player.name}
+								</div>
+								<Button
+									variant="ghost"
+									class="hover:bg-red-50"
+									size="icon"
+									on:click={() => removePlayer(player.id)}
+								>
+									<Trash class="h-4 w-4 text-red-500" />
+								</Button>
+							</div>
+						{/each}
+						<div class="mt-2 flex justify-stretch gap-2">
+							<Input placeholder="Name" id="name" bind:value={playerName} />
+							<Button variant="secondary" type="submit">
+								<UserPlus class="mr-2 h-4 w-4" /> Add
+							</Button>
 						</div>
+					</div>
+				</form>
+			</Card.Content>
+		</Card.Root>
 
-						<Button type="submit">Add</Button>
-					</form>
-					<Drawer.Footer class="pt-2">
-						<Drawer.Close>Cancel</Drawer.Close>
-					</Drawer.Footer>
-				</Drawer.Content>
-			</Drawer.Root>
-
-			{#if players.length > 0}
-				<Button variant="outline" on:click={() => startRound()}>
-					<Play class="h-4 w-4 mr-2" /> Start Game
-				</Button>
-			{/if}
-		</div>
+		{#if players.length > 0}
+			<Button class="mt-4 w-full" on:click={() => startRound()}>
+				<Play class="mr-2 h-4 w-4" /> Start Game
+			</Button>
+		{/if}
+		<div class="flex w-full items-center justify-center gap-2 p-4"></div>
 	{/if}
 
-	{#if players.length > 0}
+	{#if rounds.length > 0}
 		<Table.Root>
 			<Table.Header>
 				<Table.Row>
